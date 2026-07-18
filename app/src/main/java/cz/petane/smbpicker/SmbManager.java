@@ -15,7 +15,42 @@ public class SmbManager {
     public SmbManager(SettingsManager settings) {
         this.settings = settings;
     }
+public CIFSContext getContext() throws Exception {
 
+    Properties props = new Properties();
+
+    props.setProperty(
+            "jcifs.smb.client.enableSMB2",
+            "true"
+    );
+
+    props.setProperty(
+            "jcifs.smb.client.disableSMB1",
+            "false"
+    );
+
+
+    CIFSContext base =
+            new BaseContext(
+                    new PropertyConfiguration(props)
+            );
+
+
+    if (!settings.isAnonymous()) {
+
+        base =
+                base.withCredentials(
+                        new NtlmPasswordAuthenticator(
+                                "",
+                                settings.getUsername(),
+                                settings.getPassword()
+                        )
+                );
+    }
+
+
+    return base;
+}
 
     public boolean testConnection() {
 
