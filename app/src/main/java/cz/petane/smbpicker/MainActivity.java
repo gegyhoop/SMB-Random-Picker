@@ -1,4 +1,4 @@
-package cz.petane.randomfuturama;
+package cz.petane.Filmy;
 
 import android.content.Intent;
 import android.os.Bundle;
