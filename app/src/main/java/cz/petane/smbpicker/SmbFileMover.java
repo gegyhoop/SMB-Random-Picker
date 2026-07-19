@@ -3,7 +3,7 @@ package cz.petane.smbpicker;
 import jcifs.CIFSContext;
 import jcifs.config.PropertyConfiguration;
 import jcifs.context.BaseContext;
-import jcifs.context.SingletonContext;
+import jcifs.smb.NtlmPasswordAuthenticator;
 import jcifs.smb.SmbFile;
 
 import java.util.Properties;
@@ -59,9 +59,11 @@ public class SmbFileMover {
 
 
         return context.withCredentials(
-                null,
-                settings.getUsername(),
-                settings.getPassword()
+                new NtlmPasswordAuthenticator(
+                        "",
+                        settings.getUsername(),
+                        settings.getPassword()
+                )
         );
     }
 
