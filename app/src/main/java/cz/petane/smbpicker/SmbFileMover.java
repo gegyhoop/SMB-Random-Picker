@@ -1,45 +1,65 @@
 package cz.petane.smbpicker;
 
-import jcifs.smb.NtlmPasswordAuthentication;
+import jcifs.CIFSContext;
+import jcifs.config.PropertyConfiguration;
+import jcifs.context.BaseContext;
+import jcifs.context.SingletonContext;
 import jcifs.smb.SmbFile;
+
+import java.util.Properties;
+
 
 public class SmbFileMover {
 
     private final SettingsManager settings;
+    private final CIFSContext context;
+
 
     public SmbFileMover(SettingsManager settings) {
+
         this.settings = settings;
+
+        Properties props = new Properties();
+
+        props.setProperty(
+                "jcifs.smb.client.minVersion",
+                "SMB2"
+        );
+
+        props.setProperty(
+                "jcifs.smb.client.maxVersion",
+                "SMB3"
+        );
+
+
+        context =
+                new BaseContext(
+                        new PropertyConfiguration(props)
+                );
     }
 
 
-    private String getBaseUrl() {
 
-        String server = settings.getServer();
+    private String url(String path) {
 
-        if (settings.isAnonymous()) {
-            return "smb://" + server + "/";
-        } else {
-
-            return "smb://"
-                    + settings.getUsername()
-                    + ":"
-                    + settings.getPassword()
-                    + "@"
-                    + server
-                    + "/";
-        }
+        return "smb://"
+                + settings.getServer()
+                + "/"
+                + path
+                + "/";
     }
 
 
 
-    private NtlmPasswordAuthentication getAuth() {
+    private CIFSContext getContext() {
 
         if (settings.isAnonymous()) {
-            return null;
+            return context;
         }
 
-        return new NtlmPasswordAuthentication(
-                "",
+
+        return context.withCredentials(
+                null,
                 settings.getUsername(),
                 settings.getPassword()
         );
@@ -53,19 +73,20 @@ public class SmbFileMover {
 
             SmbFile from =
                     new SmbFile(
-                            getBaseUrl() + source,
-                            getAuth()
+                            url(source),
+                            getContext()
                     );
 
 
             SmbFile to =
                     new SmbFile(
-                            getBaseUrl() + target,
-                            getAuth()
+                            url(target),
+                            getContext()
                     );
 
 
             from.renameTo(to);
+
 
             return true;
 
@@ -86,19 +107,15 @@ public class SmbFileMover {
 
             SmbFile targetFolder =
                     new SmbFile(
-                            getBaseUrl()
-                                    + settings.getTarget()
-                                    + "/",
-                            getAuth()
+                            url(settings.getTarget()),
+                            getContext()
                     );
 
 
             SmbFile sourceFolder =
                     new SmbFile(
-                            getBaseUrl()
-                                    + settings.getSource()
-                                    + "/",
-                            getAuth()
+                            url(settings.getSource()),
+                            getContext()
                     );
 
 
@@ -112,7 +129,7 @@ public class SmbFileMover {
                         new SmbFile(
                                 sourceFolder.getPath()
                                         + file.getName(),
-                                getAuth()
+                                getContext()
                         )
                 );
             }
